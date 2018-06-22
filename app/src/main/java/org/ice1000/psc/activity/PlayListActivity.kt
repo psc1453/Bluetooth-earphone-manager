@@ -31,12 +31,14 @@ class PlayListActivity : AppCompatActivity() {
 	private lateinit var playList: File
 	private lateinit var allLists: ArrayList<String>
 	private lateinit var mostRecentSong: File
+	private lateinit var currentSong: File
 	private lateinit var nextList: String
 	private lateinit var lastList: String
 	private var mostRecentClick: Boolean = false
 	private var mostRecentClickTime: Long = System.currentTimeMillis()
 	private val mediaPlayers = mutableListOf<MediaPlayer>()
 	private lateinit var mediaSession: MediaSessionCompat
+	private val defaultValueHolder = Button(this)
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_play_list)
@@ -68,11 +70,16 @@ class PlayListActivity : AppCompatActivity() {
 			if (childAt.text == firstOrNull.name) childAt.height = 200
 		}
 		if (!::mostRecentSong.isInitialized) mostRecentSong = firstOrNull
+		currentSong = firstOrNull
 		MediaPlayer.create(this, Uri.fromFile(firstOrNull)).apply {
 			isLooping = false
 			start()
 			mediaPlayers.add(this)
 			setOnCompletionListener {
+				for (i in 0 until current_play_list.childCount) {
+					val childAt = current_play_list.getChildAt(i) as? Button ?: continue
+					if (childAt.text == firstOrNull.name) childAt.height = defaultValueHolder.height
+				}
 				mostRecentSong = firstOrNull
 				var newSong = files[random.nextInt(files.size)]
 				while (newSong == firstOrNull) newSong = files[random.nextInt(files.size)]
@@ -121,7 +128,12 @@ class PlayListActivity : AppCompatActivity() {
 				fuck()
 				if (hasDouble) startActivity(intentFor<PlayListActivity>(
 						"list" to nextList, "all_song" to allLists, "media_switched" to true))
-				else play()
+				else {
+					val random = Random()
+					var newSong = songs[random.nextInt(songs.size)]
+					while (newSong == currentSong) newSong = songs[random.nextInt(songs.size)]
+					play(firstOrNull = newSong)
+				}
 				ret = true
 				mostRecentClick = false
 			}
@@ -145,7 +157,6 @@ class PlayListActivity : AppCompatActivity() {
 			it.release()
 		}
 		mediaPlayers.clear()
-		val defaultValueHolder = Button(this)
 		for (i in 0 until current_play_list.childCount) {
 			val childAt = current_play_list.getChildAt(i) as? Button ?: continue
 			childAt.height = defaultValueHolder.height
