@@ -1,0 +1,9 @@
+<resources>
+	<string name="app_name">彭世辰耳机控制中心</string>
+	<string name="title_home">Home</string>
+	<string name="title_notifications">Settings</string>
+	<string name="play_list">Play list</string>
+	<string name="all_songs">All songs</string>
+	<string name="title_activity_play_list">PlayListActivity</string>
+	<string name="title_activity_all_songs">AllSongsActivity</string>
+</resources>
