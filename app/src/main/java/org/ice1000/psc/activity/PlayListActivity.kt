@@ -18,7 +18,21 @@ import org.jetbrains.anko.sdk25.coroutines.onLongClick
 import java.io.File
 import java.util.*
 
-
+/**
+ * @author ice1000
+ * @property songs MutableList<File>
+ * @property playList File
+ * @property allLists ArrayList<String>
+ * @property mostRecentSong File
+ * @property currentSong File
+ * @property nextList String
+ * @property lastList String
+ * @property mostRecentClick Boolean
+ * @property mostRecentClickTime Long
+ * @property mediaPlayers MutableList<MediaPlayer>
+ * @property mediaSession MediaSessionCompat
+ * @property defaultValueHolder Button
+ */
 class PlayListActivity : AppCompatActivity() {
 	companion object {
 		const val circle1 = 127
@@ -38,10 +52,11 @@ class PlayListActivity : AppCompatActivity() {
 	private var mostRecentClickTime: Long = System.currentTimeMillis()
 	private val mediaPlayers = mutableListOf<MediaPlayer>()
 	private lateinit var mediaSession: MediaSessionCompat
-	private val defaultValueHolder = Button(this)
+	private lateinit var defaultValueHolder: Button
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_play_list)
+		defaultValueHolder = Button(this)
 		val list = intent.getStringExtra("list")
 		allLists = intent.getStringArrayListExtra("all_song")
 		title = list
