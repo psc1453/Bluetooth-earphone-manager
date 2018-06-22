@@ -1,11 +1,13 @@
 package org.ice1000.psc.activity
 
+import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
@@ -39,6 +41,7 @@ class PlayListActivity : AppCompatActivity() {
 		const val circle2 = 126
 		const val upLong = 87
 		const val downLong = 88
+		val all = listOf(circle1, circle2, upLong, downLong)
 	}
 
 	private lateinit var songs: MutableList<File>
@@ -72,7 +75,53 @@ class PlayListActivity : AppCompatActivity() {
 			isActive = true
 			setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
 			setMediaButtonReceiver(null)
-			setCallback(null)
+			setCallback(object : MediaSessionCompat.Callback() {
+				private var boolean = false
+				override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
+					boolean = !boolean
+					if (boolean) return true
+					val currentTimeMillis = System.currentTimeMillis()
+					val delta = currentTimeMillis - mostRecentClickTime
+					val hasDouble = delta < 8000 && mostRecentClick
+//		toast("(delta < 8000).toString() = ${(delta < 8000)}, mostRecentClick = $mostRecentClick")
+					val ret: Boolean
+					val keyCode = mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT).keyCode
+					when (keyCode) {
+						circle1, circle2 -> {
+							if (hasDouble) mediaPlayers.lastOrNull()?.run { if (isPlaying) pause() else start() }
+							ret = true
+							mostRecentClick = true
+						}
+						upLong -> {
+							fuck()
+							if (hasDouble) startActivity(intentFor<PlayListActivity>(
+									"list" to lastList, "all_song" to allLists, "media_switched" to true))
+							else play(firstOrNull = mostRecentSong)
+							ret = true
+							mostRecentClick = false
+						}
+						downLong -> {
+							fuck()
+							if (hasDouble) startActivity(intentFor<PlayListActivity>(
+									"list" to nextList, "all_song" to allLists, "media_switched" to true))
+							else {
+								val random = Random()
+								var newSong = songs[random.nextInt(songs.size)]
+								while (newSong == currentSong) newSong = songs[random.nextInt(songs.size)]
+								play(firstOrNull = newSong)
+							}
+							ret = true
+							mostRecentClick = false
+						}
+						else -> {
+							mostRecentClick = false
+							ret = super.onMediaButtonEvent(mediaButtonEvent)
+						}
+					}
+					mostRecentClickTime = currentTimeMillis
+					return ret
+				}
+			})
 		}
 		if (intent.getBooleanExtra("media_switched", false)) play()
 	}
@@ -119,47 +168,8 @@ class PlayListActivity : AppCompatActivity() {
 		return button
 	}
 
-	override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-		val currentTimeMillis = System.currentTimeMillis()
-		val delta = currentTimeMillis - mostRecentClickTime
-		val hasDouble = delta < 8000 && mostRecentClick
-//		toast("(delta < 8000).toString() = ${(delta < 8000)}, mostRecentClick = $mostRecentClick")
-		val ret: Boolean
-		when (keyCode) {
-			circle1, circle2 -> {
-				if (hasDouble) mediaPlayers.lastOrNull()?.run { if (isPlaying) pause() else start() }
-				ret = true
-				mostRecentClick = true
-			}
-			upLong -> {
-				fuck()
-				if (hasDouble) startActivity(intentFor<PlayListActivity>(
-						"list" to lastList, "all_song" to allLists, "media_switched" to true))
-				else play(firstOrNull = mostRecentSong)
-				ret = true
-				mostRecentClick = false
-			}
-			downLong -> {
-				fuck()
-				if (hasDouble) startActivity(intentFor<PlayListActivity>(
-						"list" to nextList, "all_song" to allLists, "media_switched" to true))
-				else {
-					val random = Random()
-					var newSong = songs[random.nextInt(songs.size)]
-					while (newSong == currentSong) newSong = songs[random.nextInt(songs.size)]
-					play(firstOrNull = newSong)
-				}
-				ret = true
-				mostRecentClick = false
-			}
-			else -> {
-				mostRecentClick = false
-				ret = super.onKeyDown(keyCode, event)
-			}
-		}
-		mostRecentClickTime = currentTimeMillis
-		return ret
-	}
+	override fun onKeyDown(keyCode: Int, event: KeyEvent?) =
+			(keyCode in all) || super.onKeyDown(keyCode, event)
 
 	override fun onDestroy() {
 		super.onDestroy()
