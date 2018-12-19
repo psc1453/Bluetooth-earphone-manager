@@ -1,12 +1,7 @@
 # Bluetooth-earphone-manager
 
 To enable bluetooth earphone buttons full controlling
-d
-fxdfdfdx
 
-
-g
-c
 # Feature
 
 + No compatibility
